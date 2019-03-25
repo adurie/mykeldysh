@@ -162,13 +162,50 @@ vector<double> int_energy(double x, double z, double a, double Ef, int N){
 	return result;
 }
 
+vector<double> int_kpoints(double a, double Ef, int N){
+	vector<double> result;
+	vector<double> integrate;
+	result.reserve(N);
+	integrate.reserve(N);
+	double x, z;
+	for (int i = 0; i < N; i++)
+		result[i] = 0.;
+
+	int n = 700;
+	double factor = 8./(n*n);
+	for (int k = 0; k!=n+1; k++){
+		if (k%2!=0){
+			x = M_PI*k/n;
+			for (int l = 0; l!=k+1; l++){
+				if (l%2!=0){
+					z = M_PI*l/n;
+					/* integrate = int_theta(x, z, 1, Ef, Ef, N); */
+					integrate = int_energy(x, z, 1, Ef, N);
+					for (int i = 0; i < N; i++){
+						if ((k==1) && (l==1))
+							result[i] += factor*0.5*integrate[i];
+						else if (k==l)
+							result[i] += factor*0.5*integrate[i];
+						else
+							result[i] += factor*integrate[i];
+					}
+				}
+			}
+		}
+		if (k%20 == 0)
+			cout<<"     "<<k/(n*1.+1)*100.<<"% completed"<<endl;
+	}
+	return result;
+}
+
 int main() 
 {
 	//number of atomic planes
 	// plot output of spincurrent against energy
 	string Mydata;
 	ofstream Myfile;	
-	Mydata = "eq_sc_fixed_k_no_V.txt";
+	Mydata = "tmp.txt";
+	/* Mydata = "eq_sc_fixed_k_no_V.txt"; */
 	Myfile.open( Mydata.c_str(),ios::trunc );
 	const double Ef = -0.1;
 
@@ -177,7 +214,8 @@ int main()
 	vector<double> answer;
 	answer.reserve(N);
 	/* answer = int_theta(0, 0, 1, Ef, Ef, i); */
-	answer = int_energy(0, 0, 1, Ef, N);
+	/* answer = int_energy(0, 0, 1, Ef, N); */
+	answer = int_kpoints(1, Ef, N);
 	/* answer = f(0, 0, 1, Ef, Ef, i, 0); */
 	for (int i = 0; i < N; i++){
 		Myfile<<i<<" "<<answer[i]<<endl;
